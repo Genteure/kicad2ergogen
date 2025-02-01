@@ -1,0 +1,242 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>KiCad to Ergogen footprint converter</title>
+  </head>
+  <body class="bg-gray-900 text-gray-100 px-2">
+    <div id="root" class="max-w-4xl mx-auto">
+      <div class="my-4 text-2xl flex justify-between items-center h-full">
+        <h1>KiCad to Ergogen footprint converter</h1>
+        <a
+          href="https://github.com/genteure/kicad2ergogen"
+          target="_blank"
+          class="hover:text-gray-300"
+        >
+          <Icon name="mdi:github" title="GitHub" />
+        </a>
+      </div>
+
+      <div id="inputArea" class="my-2">
+        <div class="my-2">
+          <input
+            type="file"
+            id="fileInput"
+            class="hidden"
+            accept=".kicad_mod"
+          />
+          <button
+            type="button"
+            class="w-full p-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+            onclick="document.getElementById('fileInput').click()"
+          >
+            Select your <code class="px-1 rounded border border-blue-700"
+              >.kicad_mod</code
+            > file
+          </button>
+        </div>
+
+        <div class="my-2">
+          Or drag and drop your <code
+            class="px-1 rounded border border-blue-700">.kicad_mod</code
+          > file on this page
+        </div>
+        <textarea
+          id="kicadinput"
+          class="w-full h-32 p-2 bg-gray-800 text-gray-100"
+          placeholder="Or paste your KiCad footprint here"></textarea>
+
+        <div id="config" class="my-4">
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              id="prefixNumberPadsOnly"
+              class="mr-2"
+              checked
+            />
+            Prefix only number pads
+          </label>
+          <div class="flex items-center space-x-2">
+            <label for="padPrefix">Pad prefix</label>
+            <input
+              type="text"
+              id="padPrefix"
+              class="p-2 bg-gray-800 text-gray-100 rounded"
+              value="P"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-center items-center my-6">
+        <hr class="w-full border-gray-700" />
+        <div class="absolute bg-gray-900 px-2">
+          <Icon
+            name="material-symbols:double-arrow-rounded"
+            size="2em"
+            style="transform: rotate(90deg);"
+          />
+        </div>
+      </div>
+
+      <div id="outputArea" class="my-2">
+        <div
+          id="errorMessage"
+          style="display: none"
+          class="p-2 bg-red-600 text-white rounded my-2 flex items-center"
+        >
+          <Icon
+            name="material-symbols:warning-rounded"
+            size="1.8em"
+            class="mr-2 flex-none"
+          />
+          <span id="errorMessageText"></span>
+        </div>
+        <textarea
+          id="output"
+          class="w-full h-32 p-2 bg-gray-800 text-gray-100"
+          placeholder="Ergogen footprint will be here"
+          readonly></textarea>
+        <button
+          id="copy"
+          class="mt-2 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+        >
+          Copy to clipboard
+        </button>
+        <button
+          id="download"
+          class="mt-2 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+        >
+          Download
+        </button>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script>
+  import * as parser from "./parser";
+  import * as writer from "./ergogenWriter";
+
+  const textAreaKicadInput = document.getElementById(
+    "kicadinput"
+  ) as HTMLTextAreaElement;
+  const fileInput = document.getElementById("fileInput") as HTMLInputElement;
+
+  const configPrefixNumberPadsOnly = document.getElementById(
+    "prefixNumberPadsOnly"
+  ) as HTMLInputElement;
+  const configPadPrefix = document.getElementById(
+    "padPrefix"
+  ) as HTMLInputElement;
+
+  const output = document.getElementById("output") as HTMLTextAreaElement;
+  const copyButton = document.getElementById("copy") as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    "download"
+  ) as HTMLButtonElement;
+
+  const errorMessage = document.getElementById(
+    "errorMessage"
+  ) as HTMLDivElement;
+  const errorMessageText = document.getElementById(
+    "errorMessageText"
+  ) as HTMLSpanElement;
+
+  // handle drag and drop file loading
+  document.addEventListener("dragover", (event) => {
+    console.debug("[K2E] document.dragover");
+    event.preventDefault();
+  });
+
+  let lastFileName: string | null | undefined;
+
+  document.addEventListener("drop", async (event) => {
+    console.debug("[K2E] document.drop");
+    event.preventDefault();
+    const file = event.dataTransfer?.files?.[0];
+    console.log(event.dataTransfer);
+    if (file) {
+      lastFileName = file.name?.split("\\").pop()?.split("/").pop();
+      const text = await file.text();
+      console.debug(`loaded file with length: ${text.length}`);
+      textAreaKicadInput.value = text;
+      debouncedParse();
+    }
+  });
+
+  fileInput.addEventListener("change", async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      lastFileName = file.name?.split("\\").pop()?.split("/").pop();
+      const text = await file.text();
+      textAreaKicadInput.value = text;
+      debouncedParse();
+    }
+  });
+
+  let inputTimer: ReturnType<typeof setTimeout>;
+  function debouncedParse() {
+    if (inputTimer) clearTimeout(inputTimer);
+    inputTimer = setTimeout(() => {
+      parseKicadFootprintToAST(textAreaKicadInput.value);
+    }, 500);
+  }
+
+  textAreaKicadInput.addEventListener("input", () => {
+    lastFileName = null;
+    debouncedParse();
+  });
+  configPrefixNumberPadsOnly.addEventListener("change", debouncedParse);
+  configPadPrefix.addEventListener("input", debouncedParse);
+
+  function parseKicadFootprintToAST(text: string) {
+    try {
+      errorMessage.style.display = "none";
+      const ast = parser.parseKiCadSexp(text);
+
+      if (!ast) {
+        console.debug("[K2E] no AST to convert");
+        return;
+      }
+
+      const prefixNumberPadsOnly = configPrefixNumberPadsOnly.checked;
+      const padPrefix = configPadPrefix.value;
+
+      var w = new writer.ErgogenFootprintWriter({
+        prefixNumberPadsOnly,
+        padPrefix,
+      });
+
+      const result = w.write(ast);
+      output.value = result;
+    } catch (error) {
+      console.error(error);
+      errorMessageText.textContent = (error as any).message;
+      errorMessage.style.display = "";
+    }
+  }
+
+  copyButton.addEventListener("click", () => {
+    window.navigator.clipboard.writeText(output.value);
+  });
+
+  downloadButton.addEventListener("click", () => {
+    const filename =
+      (lastFileName || "converted_footprint").replace(/\.kicad_mod$/, "") +
+      ".js";
+    const blob = new Blob([output.value], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
