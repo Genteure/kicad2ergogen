@@ -169,8 +169,8 @@ describe('KiCad S-Expression Parser', () => {
   });
 
   describe('Manual Tests', () => {
-    test.skipIf(true)('parsing file', () => {
-      const path = '/path/to/kicad/file';
+    test.skipIf(false)('parsing file', () => {
+      const path = '/home/genteure/maker/keyboard/swoop/pcbs/swoop-mx/swoop-mx.kicad_pcb';
       const fs = require('fs');
       const input = fs.readFileSync(path, 'utf-8');
       const ast = parseKiCadSexp(input);

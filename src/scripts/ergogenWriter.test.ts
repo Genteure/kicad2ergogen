@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import * as parser from './parser';
-import { ErgogenFootprintWriter } from './writer';
+import { ErgogenFootprintWriter } from './ergogenWriter';
 
 describe('Ergogen Footprint Writer', () => {
   describe('Footprint', () => {
