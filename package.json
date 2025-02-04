@@ -9,7 +9,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "vitest",
-    "astro": "astro"
+    "astro": "astro",
+    "ufp": "esbuild universalFootprint.ts --bundle --minify --outfile=dist/ufp.js --format=cjs --platform=node"
   },
   "dependencies": {
     "@astrojs/solid-js": "^5.0.4",
@@ -24,6 +25,7 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
+    "esbuild": "^0.24.2",
     "vitest": "^3.0.4"
   }
 }

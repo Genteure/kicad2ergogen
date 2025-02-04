@@ -1,0 +1,48 @@
+meta:
+  engine: 4.1.0
+points:
+  zones:
+    m:
+      anchor.shift: [50,-100]
+      columns:
+        vert:
+        angle:
+          key.adjust.rotate: 40
+      rows:
+        one:
+        two:
+pcbs:
+  testing:
+    template: kicad8
+    footprints:
+      one:
+        where: m_vert_one
+        what: &what custom_footprint_2
+        params: &p
+          side: F
+          MP: MP
+          P1: P1
+          P2: P2
+          P3: P3
+          P4: P4
+          P5: P5
+          P6: P6
+          P7: P7
+          P8: P8
+          P9: P9
+      two:
+        where: m_vert_two
+        what: *what
+        params:
+          <<: *p
+          side: B
+      three:
+        where: m_angle_one
+        what: *what
+        params: *p
+      four:
+        where: m_angle_two
+        what: *what
+        params:
+          <<: *p
+          side: B

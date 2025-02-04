@@ -31,6 +31,9 @@ dependencies:
     version: 3.4.17
 
 devDependencies:
+  esbuild:
+    specifier: ^0.24.2
+    version: 0.24.2
   vitest:
     specifier: ^3.0.4
     version: 3.0.4
@@ -866,6 +869,13 @@ packages:
       estree-walker: 2.0.2
       picomatch: 4.0.2
     dev: false
+
+  /@rollup/rollup-android-arm-eabi@4.34.0:
+    resolution: {integrity: sha512-Eeao7ewDq79jVEsrtWIj5RNqB8p2knlm9fhR6uJ2gqP7UfbLrTrxevudVrEPDM7Wkpn/HpRC2QfazH7MXLz3vQ==}
+    cpu: [arm]
+    os: [android]
+    requiresBuild: true
+    optional: true
 
   /@rollup/rollup-darwin-arm64@4.34.0:
     resolution: {integrity: sha512-gCs0ErAZ9s0Osejpc3qahTsqIPUDjSKIyxK/0BGKvL+Tn0n3Kwvj8BrCv7Y5sR1Ypz1K2qz9Ny0VvkVyoXBVUQ==}
@@ -3481,6 +3491,7 @@ packages:
     dependencies:
       '@types/estree': 1.0.6
     optionalDependencies:
+      '@rollup/rollup-android-arm-eabi': 4.34.0
       '@rollup/rollup-darwin-arm64': 4.34.0
       '@rollup/rollup-darwin-x64': 4.34.0
       '@rollup/rollup-linux-x64-gnu': 4.34.0
