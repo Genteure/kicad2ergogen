@@ -17,8 +17,10 @@
     "@astrojs/tailwind": "^5.1.5",
     "@iconify-json/material-symbols": "^1.2.13",
     "@iconify-json/mdi": "^1.2.3",
+    "@types/dxf": "^4.6.9",
     "astro": "^5.2.3",
     "astro-icon": "^1.1.5",
+    "dxf": "^5.2.0",
     "solid-js": "^1.9.4",
     "tailwindcss": "^3.4.17"
   },

@@ -1,0 +1,206 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Rotation stuff</title>
+  </head>
+  <body class="bg-gray-900 text-gray-100 h-screen">
+    <div id="root" class="relative h-full">
+      <div
+        id="graphs"
+        class="absolute size-full grid grid-rows-2 grid-cols-1 lg:grid-rows-1 lg:grid-cols-2"
+      >
+        <div id="before" class="border border-gray-500 bg-blue-950 relative">
+          <div
+            class="absolute size-full flex items-center justify-center pointer-events-none"
+          >
+            <img
+              id="beforeSvg"
+              class="size-3/5"
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+            />
+          </div>
+          <div class="absolute w-full top-[70%] flex font-bold justify-center">
+            <div
+              class="w-fit rounded flex flex-col items-center p-2 bg-gray-800 bg-opacity-70"
+            >
+              <div>Original</div>
+              <div>
+                <span id="beforeWidth"></span> x <span id="beforeHeight"></span>
+              </div>
+              <div>
+                Area: <span id="beforeArea"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="after" class="border border-gray-500 bg-green-950 relative">
+          <div
+            class="absolute size-full flex items-center justify-center pointer-events-none"
+          >
+            <img
+              id="afterSvg"
+              class="size-3/5"
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+            />
+          </div>
+          <div class="absolute w-full top-[70%] flex font-bold justify-center">
+            <div
+              class="w-fit rounded flex flex-col items-center p-2 bg-gray-800 bg-opacity-70"
+            >
+              <div>
+                Rotated <span id="bestRotation"></span>°
+              </div>
+              <div>
+                <span id="afterWidth"></span> x <span id="afterHeight"></span>
+              </div>
+              <div>
+                Area: <span id="afterArea"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        id="middle"
+        class="absolute size-full pointer-events-none
+         flex flex-row justify-center items-center gap-1 flex-wrap content-center
+         lg:flex-col lg:h-1/2"
+      >
+        <button
+          id="loadDxf"
+          class="pointer-events-auto bg-blue-700 hover:bg-blue-800 text-white p-2 rounded-lg border border-gray-400"
+        >
+          Load DXF
+        </button>
+        <button
+          class="pointer-events-auto bg-blue-700 hover:bg-blue-800 text-white p-2 rounded-lg border border-gray-400"
+          onclick="about.style.display = ''"
+        >
+          About
+        </button>
+      </div>
+
+      <div
+        id="about"
+        class="absolute p-8 size-full bg-black bg-opacity-70"
+        style="display: none;"
+      >
+        <div
+          class="border border-gray-200 bg-gray-700 rounded-lg p-4 shadow-lg flex flex-col gap-4 max-h-full max-w-xl mx-auto"
+        >
+          <div class="flex flex-row justify-between items-center">
+            <h1 class="text-center text-2xl">About</h1>
+            <button
+              class="p-2 text-gray-100 hover:text-gray-300 rounded-full bg-gray-800 shadow-lg"
+              onclick="about.style.display = 'none'"
+            >
+              <Icon name="mdi:close" />
+            </button>
+          </div>
+          <div class="overflow-y-auto max-h-full">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ea tempore
+            ratione excepturi tenetur, nobis nihil laudantium et voluptate!
+            Minima laudantium iure possimus tenetur sint praesentium rerum, sunt
+            harum molestias explicabo!
+          </div>
+        </div>
+      </div>
+    </div>
+    <input type="file" name="fileInput" id="fileInput" class="hidden" />
+  </body>
+</html>
+
+<script>
+  import banana from "../scripts/rotate/defaultShape";
+  import { parseDxf } from "../scripts/rotate/dxf";
+  import type { Shape } from "../scripts/rotate/rotate";
+  import {
+    computeBoundingBox,
+    findMinAreaRotationAngle,
+    rotateShape,
+  } from "../scripts/rotate/rotate";
+  import { toSVG } from "../scripts/rotate/svg";
+
+  const fileInput = document.getElementById("fileInput") as HTMLInputElement;
+
+  (document.getElementById("loadDxf") as HTMLButtonElement).addEventListener(
+    "click",
+    () => {
+      fileInput.click();
+    }
+  );
+
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    const fileContent = await file.text();
+    if (!fileContent || !fileContent.trim()) return;
+    const shape = parseDxf(fileContent);
+    console.log(shape);
+
+    processShape(shape);
+  });
+
+  processShape(banana);
+
+  function processShape(shape: Shape) {
+    const bbox = computeBoundingBox(shape);
+    const beforeSvg = toSVG(shape, bbox);
+
+    const best = findMinAreaRotationAngle(shape);
+    console.log(best);
+
+    const afterSvg = toSVG(
+      rotateShape(shape, (best.bestRotation * Math.PI) / 180),
+      best.bestBoundingBox
+    );
+
+    const numbers = {
+      beforeWidth: bbox.maxX - bbox.minX,
+      beforeHeight: bbox.maxY - bbox.minY,
+      afterWidth: best.bestBoundingBox.maxX - best.bestBoundingBox.minX,
+      afterHeight: best.bestBoundingBox.maxY - best.bestBoundingBox.minY,
+    };
+
+    console.log(`Calculated optimal rotation angle: ${best.bestRotation}°
+Area before rotation: ${numbers.beforeWidth} x ${numbers.beforeHeight} = ${numbers.beforeWidth * numbers.beforeHeight}
+Area after rotation: ${numbers.afterWidth} x ${numbers.afterHeight} = ${numbers.afterWidth * numbers.afterHeight}
+Reduced area by ${((1 - (numbers.afterWidth * numbers.afterHeight) / (numbers.beforeWidth * numbers.beforeHeight)) * 100).toFixed(2)}%
+`);
+
+    const beforeSvgElement = document.getElementById(
+      "beforeSvg"
+    ) as HTMLImageElement;
+    const afterSvgElement = document.getElementById(
+      "afterSvg"
+    ) as HTMLImageElement;
+    beforeSvgElement.src = `data:image/svg+xml,${encodeURIComponent(beforeSvg)}`;
+    afterSvgElement.src = `data:image/svg+xml,${encodeURIComponent(afterSvg)}`;
+
+    (document.getElementById("bestRotation") as HTMLSpanElement).textContent =
+      best.bestRotation.toFixed(2);
+    (document.getElementById("beforeWidth") as HTMLSpanElement).textContent =
+      numbers.beforeWidth.toFixed(2);
+    (document.getElementById("beforeHeight") as HTMLSpanElement).textContent =
+      numbers.beforeHeight.toFixed(2);
+    (document.getElementById("beforeArea") as HTMLSpanElement).textContent = (
+      numbers.beforeWidth * numbers.beforeHeight
+    ).toFixed(2);
+    (document.getElementById("afterWidth") as HTMLSpanElement).textContent =
+      numbers.afterWidth.toFixed(2);
+    (document.getElementById("afterHeight") as HTMLSpanElement).textContent =
+      numbers.afterHeight.toFixed(2);
+    (document.getElementById("afterArea") as HTMLSpanElement).textContent = (
+      numbers.afterWidth * numbers.afterHeight
+    ).toFixed(2);
+  }
+</script>
