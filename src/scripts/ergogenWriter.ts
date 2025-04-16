@@ -120,6 +120,7 @@ function appendDrawings(drawings: SExprNode[], bodySection: string[]) {
       'start': appendFlipableXY,
       'end': appendFlipableXY,
       'mid': appendFlipableXY,
+      'center': appendFlipableXY,
       'xy': appendFlipableXY,
       'pts': (to: string[], node: SExprNode) => {
         to.push(' (pts');
