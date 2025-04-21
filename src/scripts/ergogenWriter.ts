@@ -342,7 +342,7 @@ function padNameToNetName(config: ErgogenFootprintWriterConfig, padName: string)
  * @param node
  */
 function appendFlipableXY(target: string[], node: SExprNode): void {
-  if (!['start', 'end', 'mid', 'xy'].includes(node.type)) throw new Error('expected "start", "end", "mid", or "xy" node');
+  if (!['start', 'end', 'mid', 'center', 'xy'].includes(node.type)) throw new Error('expected "start", "end", "mid", "center", or "xy" node');
   if (node.items.length !== 2) throw new Error('invalid number of items in "start", "end", "mid", or "xy" node');
   if (node.items.some((item) => typeof item !== 'string')) throw new Error('invalid item in "start", "end", "mid", or "xy" node');
 
