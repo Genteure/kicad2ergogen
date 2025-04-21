@@ -277,6 +277,7 @@ function groupNodes(node: SExprNode) {
         break;
       case 'property':
       case 'uuid':
+      case 'version':
         // ignore
         break;
       default:
