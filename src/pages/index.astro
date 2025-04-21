@@ -37,9 +37,9 @@ import { Icon } from "astro-icon/components";
             class="w-full p-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
             onclick="document.getElementById('fileInput').click()"
           >
-            Select your <code class="px-1 rounded border border-blue-700"
-              >.kicad_mod</code
-            > file
+            Select
+            <code class="px-1 rounded border border-blue-700">.kicad_mod</code>
+            file
           </button>
         </div>
 
@@ -116,6 +116,44 @@ import { Icon } from "astro-icon/components";
         >
           Download
         </button>
+      </div>
+
+      <div class="my-2">
+        <hr class="w-full border-gray-700 my-6" />
+        <h2 class="text-lg font-bold my-2">Known issues & TODOs</h2>
+        <ul class="list-disc pl-6 [&>li]:py-1">
+          <li>
+            I have tried to make sure the filpped footprint behaves the same as
+            in KiCad, but there might be some edge cases I missed. If you're
+            changing <code class="underline">side</code>, make sure to double
+            check and compare the generated footprint with the original.
+          </li>
+          <li>
+            3D models are not filpped with the footprint, they are always on the
+            original side.
+          </li>
+          <li><code class="underline">zone</code>s are not handled yet.</li>
+          <li>
+            Pads with custom shape (e.g. jumper pads) are not correctly handled.
+            Example:
+            <a
+              class="text-blue-400 hover:text-blue-300"
+              target="_blank"
+              rel="nofollow noreferrer"
+              href="https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/f4690e2a06ec16b869773ba61d7562488de1c987/Jumper.pretty/SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm.kicad_mod#L275-307"
+            >
+              <code class="break-all">
+                SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm.kicad_mod
+              </code>
+            </a>
+          </li>
+          <li>
+            All footprint level properties are dropped. You might want to add
+            them back manually, especially if you need them for generating PCBA
+            related files. For example <code class="underline">LCSC</code> for LCSC
+            part number.
+          </li>
+        </ul>
       </div>
     </div>
   </body>
