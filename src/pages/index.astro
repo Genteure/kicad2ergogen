@@ -267,9 +267,7 @@ import { Icon } from "astro-icon/components";
   });
 
   downloadButton.addEventListener("click", () => {
-    const filename =
-      (lastFileName || "converted_footprint").replace(/\.kicad_mod$/, "") +
-      ".js";
+    const filename = `${(lastFileName || "converted_footprint").replace(/\.kicad_mod$/, "").replaceAll(".", "_")}.js`;
     const blob = new Blob([output.value], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
