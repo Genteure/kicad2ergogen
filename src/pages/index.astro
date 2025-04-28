@@ -134,18 +134,21 @@ import { Icon } from "astro-icon/components";
           </li>
           <li><code class="underline">zone</code>s are not handled yet.</li>
           <li>
-            Pads with custom shape (e.g. jumper pads) are not correctly handled.
-            Example:
-            <a
-              class="text-blue-400 hover:text-blue-300"
-              target="_blank"
-              rel="nofollow noreferrer"
-              href="https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/f4690e2a06ec16b869773ba61d7562488de1c987/Jumper.pretty/SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm.kicad_mod#L275-307"
-            >
-              <code class="break-all">
-                SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm.kicad_mod
-              </code>
-            </a>
+            <span class="font-bold text-red-400">Now supported!</span>
+            <span class="line-through">
+              Pads with custom shape (e.g. jumper pads) are not correctly
+              handled. Example:
+              <a
+                class="text-blue-400 hover:text-blue-300"
+                target="_blank"
+                rel="nofollow noreferrer"
+                href="https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/f4690e2a06ec16b869773ba61d7562488de1c987/Jumper.pretty/SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm.kicad_mod#L275-307"
+              >
+                <code class="break-all">
+                  SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm.kicad_mod
+                </code>
+              </a>
+            </span>
           </li>
           <li>
             All footprint level properties are dropped. You might want to add
@@ -161,7 +164,8 @@ import { Icon } from "astro-icon/components";
 
 <script>
   import * as parser from "../scripts/parser";
-  import * as writer from "../scripts/ergogenWriter";
+  // import * as writer from "../scripts/ergogenWriter";
+  import converter from "../scripts/ergogenWriterNext";
 
   const textAreaKicadInput = document.getElementById(
     "kicadinput"
@@ -248,13 +252,13 @@ import { Icon } from "astro-icon/components";
       const prefixNumberPadsOnly = configPrefixNumberPadsOnly.checked;
       const padPrefix = configPadPrefix.value;
 
-      var w = new writer.ErgogenFootprintWriter({
+      const result = converter(ast, {
         prefixNumberPadsOnly,
         padPrefix,
       });
 
-      const result = w.write(ast);
-      output.value = result;
+      output.value = result.ergogenCode;
+      console.debug("[K2E] net map", result.netMap);
     } catch (error) {
       console.error(error);
       errorMessageText.textContent = (error as any).message;
