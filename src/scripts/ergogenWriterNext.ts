@@ -4,6 +4,7 @@ interface WriterContext {
   current: SExprNode;
   parents: string[];
   getNetName: (padName: string) => string;
+  addExtraFunction: (code: string) => void;
   appendOutput: (text: string) => void;
   appendOutputRaw: (text: string) => void;
   writeChildItem: (item: SExprItem) => void;
@@ -43,6 +44,26 @@ const writers: NodeWriters = [
 
       context.appendOutputRaw(')');
     }
+  },
+  {
+    name: 'zone xy',
+    match(context) {
+      return context.current.type === 'xy' && context.parents.includes('zone');
+    },
+    write(context) {
+      context.addExtraFunction(`function zoneXY(point, offsetX, offsetY) {
+  const rad = -point.rot * Math.PI / 180;
+  const x = point.x + offsetX * Math.cos(rad) - offsetY * Math.sin(rad);
+  const y = point.y + offsetX * Math.sin(rad) + offsetY * Math.cos(rad);
+  return \`(xy \${x.toFixed(3)} \${y.toFixed(3)})\`;
+}`);
+
+      const node = context.current as SExprNode;
+      const x = node.items[0] as string;
+      const y = node.items[1] as string;
+      const flippedX = x.startsWith('-') ? x.slice(1) : `-${x}`;
+      context.appendOutputRaw(`\${zoneXY(p, flip ? ${flippedX} : ${x}, ${y})}`);
+    },
   },
   {
     name: 'xy',
@@ -247,7 +268,7 @@ export default function convertToErgogenFootprint(
   const fullConfig = { ...defaultConfig, ...config };
   const footprintCode: string[] = [];
   const pad2net = new Map<string, string>(Object.entries(fullConfig.netNameOverride));
-
+  const extraFunctions = new Set<string>();
 
   const baseContext: WriterContext = {
     current: { type: '', items: [] }, // dummy placeholder
@@ -280,6 +301,9 @@ export default function convertToErgogenFootprint(
       pad2net.set(padName, netName);
       return netName;
     },
+    addExtraFunction: (code: string) => {
+      extraFunctions.add(code);
+    },
     appendOutput: (text: string) => footprintCode.push(text.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${')),
     appendOutputRaw: (text: string) => footprintCode.push(text),
     writeChildItem(node: SExprItem) {
@@ -303,18 +327,8 @@ export default function convertToErgogenFootprint(
     }
   };
 
-  // let defaultSide = 'F';
-  const footprintLayerNode = footprint.items.find(i => typeof i !== 'string' && i.type === 'layer') as SExprNode | undefined;
-  // if (footprintLayerNode) {
-  //   const layerName = footprintLayerNode.items[0] as string;
-  //   if (layerName.startsWith('F.')) {
-  //     defaultSide = 'F';
-  //   } else if (layerName.startsWith('B.')) {
-  //     defaultSide = 'B';
-  //   }
-  // }
-
   (function writeStart() {
+    const footprintLayerNode = footprint.items.find(i => typeof i !== 'string' && i.type === 'layer') as SExprNode | undefined;
     let defaultSide = 'F';
     let layerName = '';
     if (footprintLayerNode) {
@@ -347,10 +361,11 @@ export default function convertToErgogenFootprint(
     if (layerName) {
       baseContext.appendOutputRaw(`fp.push(\`(layer "\${(flip ? "${layerName.replace(defaultSide, flipSide)}" : "${layerName}")}")\`);\n`);
     }
+
+    baseContext.appendOutputRaw(`fp.push(\`(property "Reference" "\${p.ref}" \${p.ref_hide} (at 0 0 \${p.r}) (layer "\${p.side}.SilkS") (effects (font (size 1 1) (thickness 0.15))\${ p.side === "B" ? " (justify mirror)" : ""}))\`);\n`);
   })();
 
   const groupedElements = groupElements(footprint);
-
   for (const group of groupedElements) {
     baseContext.appendOutputRaw('\n');
     if (group.groupName) {
@@ -397,6 +412,7 @@ ${Array.from(pad2net.values())
     return fp.join('\\n');
   }
 }
+${Array.from(extraFunctions).join('\n')}
 `;
 
   return {

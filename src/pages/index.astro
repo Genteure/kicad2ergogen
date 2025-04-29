@@ -1,5 +1,6 @@
 ---
 import { Icon } from "astro-icon/components";
+import NetMapTable from "../components/NetMapTable";
 ---
 
 <!doctype html>
@@ -72,6 +73,19 @@ import { Icon } from "astro-icon/components";
               value="P"
             />
           </div>
+          <div class="my-2">
+            <details>
+              <summary class="cursor-pointer">
+                <span class="font-bold">Net Name Override</span>
+                <span class="text-gray-400 select-none">
+                  (Click to expand/collapse)
+                </span>
+              </summary>
+              <div class="p-2">
+                <NetMapTable client:only />
+              </div>
+            </details>
+          </div>
         </div>
       </div>
 
@@ -104,6 +118,19 @@ import { Icon } from "astro-icon/components";
           class="w-full h-32 p-2 bg-gray-800 text-gray-100"
           placeholder="Ergogen footprint will be here"
           readonly></textarea>
+        <div class="my-2">
+          <h2 class="text-lg font-bold">TODOs for you</h2>
+          <ul class="list-disc pl-6">
+            <li>Verify the generated footprint is correct.</li>
+            <li>
+              Change the <code class="underline">designator</code>.
+            </li>
+            <li>
+              Optionally, uncomment the properties you want to keep in the
+              generated footprint.
+            </li>
+          </ul>
+        </div>
         <button
           id="copy"
           class="mt-2 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
@@ -132,7 +159,11 @@ import { Icon } from "astro-icon/components";
             3D models are not filpped with the footprint, they are always on the
             original side.
           </li>
-          <li><code class="underline">zone</code>s are not handled yet.</li>
+          <li>
+            <span class="font-bold text-red-400">Now supported!</span>
+            <span class="line-through"
+              ><code class="underline">zone</code>s are not handled yet.</span>
+          </li>
           <li>
             <span class="font-bold text-red-400">Now supported!</span>
             <span class="line-through">
@@ -166,6 +197,11 @@ import { Icon } from "astro-icon/components";
   import * as parser from "../scripts/parser";
   // import * as writer from "../scripts/ergogenWriter";
   import converter from "../scripts/ergogenWriterNext";
+
+  import type {
+    NetMapTableItem,
+    NetMapTableStore,
+  } from "../components/NetMapTable";
 
   const textAreaKicadInput = document.getElementById(
     "kicadinput"
@@ -239,8 +275,16 @@ import { Icon } from "astro-icon/components";
   configPrefixNumberPadsOnly.addEventListener("change", debouncedParse);
   configPadPrefix.addEventListener("input", debouncedParse);
 
+  document.addEventListener("DOMContentLoaded", () => {
+    (window as any).debouncedParse = debouncedParse;
+    debouncedParse();
+  });
+
   function parseKicadFootprintToAST(text: string) {
     try {
+      const netMapTableStore: NetMapTableStore = (window as any)
+        ?.netMapTableStore as NetMapTableStore;
+
       errorMessage.style.display = "none";
       const ast = parser.parseKiCadSexp(text);
 
@@ -252,13 +296,27 @@ import { Icon } from "astro-icon/components";
       const prefixNumberPadsOnly = configPrefixNumberPadsOnly.checked;
       const padPrefix = configPadPrefix.value;
 
+      const netmapInput = Object.fromEntries(
+        netMapTableStore.items
+          .map((item: NetMapTableItem) => [item.pad, item.netWant])
+          .filter(([pad, net]) => pad && net)
+      );
+
       const result = converter(ast, {
         prefixNumberPadsOnly,
         padPrefix,
+        netNameOverride: netmapInput,
       });
 
       output.value = result.ergogenCode;
       console.debug("[K2E] net map", result.netMap);
+
+      const newMap = Object.entries(result.netMap).map(([pad, net]) => ({
+        pad,
+        netNow: net,
+        netWant: netmapInput[pad] || "",
+      }));
+      netMapTableStore.setItems(newMap);
     } catch (error) {
       console.error(error);
       errorMessageText.textContent = (error as any).message;
