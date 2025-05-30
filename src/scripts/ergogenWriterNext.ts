@@ -3,7 +3,7 @@ import type { SExprNode, SExprItem } from './parser';
 interface WriterContext {
   current: SExprNode;
   parents: string[];
-  getNetName: (padName: string) => string;
+  getNetName: (padName: string) => string | null;
   addExtraFunction: (code: string) => void;
   appendOutput: (text: string) => void;
   appendOutputRaw: (text: string) => void;
@@ -40,7 +40,10 @@ const writers: NodeWriters = [
         context.appendOutputRaw(' ');
         context.writeChildItem(item);
       }
-      context.appendOutputRaw(` \${p.${netName}}`);
+
+      if (netName) {
+        context.appendOutputRaw(` \${p.${netName}}`);
+      }
 
       context.appendOutputRaw(')');
     }
@@ -273,7 +276,11 @@ export default function convertToErgogenFootprint(
   const baseContext: WriterContext = {
     current: { type: '', items: [] }, // dummy placeholder
     parents: [],
-    getNetName: (padName: string): string => {
+    getNetName: (padName: string): string | null => {
+      if (padName === '') {
+        return null;
+      }
+
       if (pad2net.has(padName)) {
         return pad2net.get(padName)!;
       }
