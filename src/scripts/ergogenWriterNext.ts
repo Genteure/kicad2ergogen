@@ -146,7 +146,7 @@ const writers: NodeWriters = [
       const flippedX = x.startsWith('-') ? x.slice(1) : `-${x}`;
       let r = '${p.r}';
       if (node.items.length === 3) {
-        r = `\${(p.r + ${node.items[2]}) % 360}`;
+        r = `\${flip ? (p.r - ${node.items[2]}) % 360 : (p.r + ${node.items[2]}) % 360}`;
       }
 
       if (/^-?0(?:\.0+)?$/.test(x)) { // if x is 0 or -0
