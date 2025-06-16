@@ -34,8 +34,8 @@ jobs:
           sudo add-apt-repository --yes ppa:kicad/kicad-8.0-releases
           sudo apt-get update
           sudo apt-get install --no-install-recommends --yes kicad
-          # Link kigadgets with KiCad
-          python -m kigadgets
       - name: Run tests
+        env:
+          PCBNEW_PATH: /usr/lib/python3/dist-packages/pcbnew.py
         run: |
           pnpm test
