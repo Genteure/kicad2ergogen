@@ -28,10 +28,10 @@ jobs:
         run: |
           pnpm install
           pip install -r test/bin/requirements.txt
-      - name: Install KiCad 8
+      - name: Install KiCad 9
         run: |
-          # Add KiCad PPA and install KiCad 8
-          sudo add-apt-repository --yes ppa:kicad/kicad-8.0-releases
+          # Add KiCad PPA and install KiCad 9
+          sudo add-apt-repository --yes ppa:kicad/kicad-9.0-releases
           sudo apt-get update
           sudo apt-get install --no-install-recommends --yes kicad
       - name: Run tests

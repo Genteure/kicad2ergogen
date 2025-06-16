@@ -167,15 +167,4 @@ describe('KiCad S-Expression Parser', () => {
       expect(ast.items).toEqual(['42', '3.14', '+5', '-0.1', '_sym@']);
     });
   });
-
-  describe('Manual Tests', () => {
-    test.skipIf(false)('parsing file', () => {
-      const path = '/home/genteure/maker/keyboard/swoop/pcbs/swoop-mx/swoop-mx.kicad_pcb';
-      const fs = require('fs');
-      const input = fs.readFileSync(path, 'utf-8');
-      const ast = parseKiCadSexp(input);
-      expect(ast).toBeDefined();
-      // console.log(ast);
-    });
-  });
 });
