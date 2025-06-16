@@ -13,21 +13,23 @@
     "ufp": "esbuild universalFootprint.ts --bundle --minify --outfile=dist/ufp.js --format=cjs --platform=node"
   },
   "dependencies": {
-    "@astrojs/solid-js": "^5.0.4",
+    "@astrojs/solid-js": "^5.1.0",
     "@astrojs/tailwind": "^5.1.5",
-    "@iconify-json/material-symbols": "^1.2.13",
+    "@iconify-json/material-symbols": "^1.2.25",
     "@iconify-json/mdi": "^1.2.3",
-    "@types/dxf": "^4.6.9",
-    "astro": "^5.2.3",
+    "@types/dxf": "^4.6.10",
+    "astro": "^5.9.2",
     "astro-icon": "^1.1.5",
     "dxf": "^5.2.0",
-    "solid-js": "^1.9.4",
+    "solid-js": "^1.9.7",
     "tailwindcss": "^3.4.17"
   },
   "keywords": [],
   "author": "",
   "devDependencies": {
+    "@types/node": "^24.0.1",
+    "ergogen": "^4.1.0",
     "esbuild": "^0.24.2",
-    "vitest": "^3.0.4"
+    "vitest": "^3.2.3"
   }
 }

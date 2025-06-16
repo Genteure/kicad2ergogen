@@ -11,11 +11,14 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-[*.{mjs,js,ts,astro,jsx,tsx}]
+[*.{mjs,js,cjs,ts,astro,jsx,tsx}]
 indent_size = 2
 
 [*.json]
 indent_size = 2
 
 [*.md]
+indent_size = 2
+
+[*.{yml,yaml}]
 indent_size = 2

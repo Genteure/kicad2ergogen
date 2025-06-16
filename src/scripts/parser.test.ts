@@ -175,7 +175,7 @@ describe('KiCad S-Expression Parser', () => {
       const input = fs.readFileSync(path, 'utf-8');
       const ast = parseKiCadSexp(input);
       expect(ast).toBeDefined();
-      console.log(ast);
+      // console.log(ast);
     });
   });
 });

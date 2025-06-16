@@ -11,7 +11,7 @@ describe('Ergogen Footprint Writer', () => {
 
       const writer = new ErgogenFootprintWriter();
       const output = writer.write(ast);
-      console.log(output);
+      // console.log(output);
     });
   });
 });

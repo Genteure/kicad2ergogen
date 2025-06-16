@@ -77,8 +77,8 @@ const writers: NodeWriters = [
       const node = context.current as SExprNode;
       const x = node.items[0] as string;
       const y = node.items[1] as string;
-      const flippedX = x.startsWith('-') ? x.slice(1) : `-${x}`;
-      context.appendOutputRaw(`(${node.type} \${(flip ? ${flippedX} : ${x})} ${y})`);
+
+      context.appendOutputRaw(`(${node.type} ${x} \${flipN(flip, ${y})})`);
     }
   },
   {
@@ -143,17 +143,12 @@ const writers: NodeWriters = [
 
       const x = node.items[0] as string;
       const y = node.items[1] as string;
-      const flippedX = x.startsWith('-') ? x.slice(1) : `-${x}`;
-      let r = '${p.r}';
-      if (node.items.length === 3) {
-        r = `\${flip ? (p.r - ${node.items[2]}) % 360 : (p.r + ${node.items[2]}) % 360}`;
-      }
+      const r = node.items.length === 3 ? node.items[2] as string : '0';
 
-      if (/^-?0(?:\.0+)?$/.test(x)) { // if x is 0 or -0
-        context.appendOutputRaw(`(at ${x} ${y} ${r})`);
-      } else {
-        context.appendOutputRaw(`(at \${(flip ? ${flippedX} : ${x})} ${y} ${r})`);
-      }
+      const parents = context.parents;
+      const drawing = parents.includes('fp_text') || parents.includes('fp_text_box') || parents.includes('property');
+
+      context.appendOutputRaw(`(at ${x} \${flipN(flip, ${y})} \${flipR(flip, p.r + ${r})${drawing ? ' % 180' : ''}})`);
     }
   },
   {
@@ -362,14 +357,17 @@ export default function convertToErgogenFootprint(
     }
     baseContext.appendOutputRaw(`\`);\n`);
 
-    baseContext.appendOutputRaw(`fp.push(p.at);\n`);
+    baseContext.appendOutputRaw(`fp.push(\`(at \${p.x} \${p.y} \${flipR(flip, p.r)})\`);\n`);
 
     // layer
     if (layerName) {
       baseContext.appendOutputRaw(`fp.push(\`(layer "\${(flip ? "${layerName.replace(defaultSide, flipSide)}" : "${layerName}")}")\`);\n`);
     }
 
-    baseContext.appendOutputRaw(`fp.push(\`(property "Reference" "\${p.ref}" \${p.ref_hide} (at 0 0 \${p.r}) (layer "\${p.side}.SilkS") (effects (font (size 1 1) (thickness 0.15))\${ p.side === "B" ? " (justify mirror)" : ""}))\`);\n`);
+    baseContext.appendOutputRaw(`fp.push(\`(property "Reference" "\${p.ref}" \${p.ref_hide} (at 0 0 \${flipR(flip, p.r) % 180}) (layer "\${p.side}.SilkS") (effects (font (size 1 1) (thickness 0.15))\${ p.side === "B" ? " (justify mirror)" : ""}))\`);\n`);
+    baseContext.appendOutputRaw(`fp.push(\`(property "Value" "" hide (at 0 0 \${flipR(flip, p.r) % 180}) (layer "\${p.side}.Fab") (effects (font (size 1 1) (thickness 0.15))\${ p.side === "B" ? " (justify mirror)" : ""}))\`);\n`);
+    baseContext.appendOutputRaw(`fp.push(\`(property "Datasheet" "" hide (at 0 0 \${flipR(flip, p.r) % 180}) (layer "\${p.side}.Fab") (effects (font (size 1 1) (thickness 0.15))\${ p.side === "B" ? " (justify mirror)" : ""}))\`);\n`);
+    baseContext.appendOutputRaw(`fp.push(\`(property "Description" "" hide (at 0 0 \${flipR(flip, p.r) % 180}) (layer "\${p.side}.Fab") (effects (font (size 1 1) (thickness 0.15))\${ p.side === "B" ? " (justify mirror)" : ""}))\`);\n`);
   })();
 
   const groupedElements = groupElements(footprint);
@@ -419,6 +417,14 @@ ${Array.from(pad2net.values())
     return fp.join('\\n');
   }
 }
+function normalizeAngle(angle) {
+  angle = angle % 360;
+  if (angle <= -180) angle += 360;
+  else if (angle > 180) angle -= 360;
+  return angle;
+}
+function flipR(flip, r) { return normalizeAngle(flip ? (180 - r) : r) }
+function flipN(flip, n) { return flip ? -n : n }
 ${Array.from(extraFunctions).join('\n')}
 `;
 
